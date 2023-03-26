@@ -1,0 +1,40 @@
+---
+# tasks file for nginx
+
+#################################  Install and Config Nginx   ##########################################
+- name: NGINX | Install NGINX package from EPEL Repo
+  yum:
+    name: nginx
+    state: latest
+  notify:
+    - restart nginx
+
+- name: NGINX | Create NGINX config file from template
+  template:
+    src: nginx_conf.j2
+    dest: /etc/nginx/nginx.conf
+  notify:
+    - reload nginx        
+  tags:
+    - nginx-conf
+
+- name: Create certificates folder 
+  file: path=/etc/nginx/certs state=directory owner=root group=root mode=0755
+
+- name: copy cert generator script
+  copy: src=cert-generator.sh dest=/etc/nginx/certs/cert-generator.sh owner=root group=root mode=0755
+
+- name: Generate certificates
+  shell: |
+    cd /etc/nginx/certs/
+    sh /etc/nginx/certs/cert-generator.sh wp.lab.local
+    sh /etc/nginx/certs/cert-generator.sh grafana.lab.local    
+    sh /etc/nginx/certs/cert-generator.sh prometheus.lab.local
+
+- name: Restart and enable NGINX
+  service:
+    name: nginx
+    state: restarted
+    enabled: true
+
+

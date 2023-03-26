@@ -1,0 +1,4 @@
+#!/usr/bin/sh
+
+{% if inventory_hostname == 'testpr2' %}rsync -aPzd root@10.10.62.12:/var/www/html/wp.lab.local/ /var/www/html/wp.lab.local{% elif inventory_hostname == 'testpr3' %}rsync -aPzd root@10.10.62.11:/var/www/html/wp.lab.local/ /var/www/html/wp.lab.local{% endif %} 
+ 

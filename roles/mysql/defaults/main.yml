@@ -1,0 +1,6 @@
+---
+# defaults file for mysql
+MYSQL_ROOT_PASSWORD: PaSswoRd@123
+admin_mysqlpass: rRxTh=YdFrwk3
+mysqld_exporter_mysqlpass: s56ffgh9K6&dfk
+wpuser_mysqlpass: rRxTh=YdFrwk3

@@ -1,0 +1,11 @@
+/etc/rsyslog.conf
+
+$ModLoad imfile
+$InputFileName /var/log/mysqld.log
+$InputFileTag mysql_log:
+$InputFileStateFile stat-mysql_log
+$InputFileSeverity info
+$InputFileFacility local3
+$InputRunFileMonitor
+$InputFilePollInterval 10
+local3.* @@10.10.62.13:514

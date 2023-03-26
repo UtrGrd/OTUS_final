@@ -1,0 +1,75 @@
+---
+# tasks file for wordpress
+#################################  Install and config Apache ########################################## 
+- name: Install and config Apache
+  block:
+    - name: install Apache
+      yum:
+        name:
+            - httpd
+            - yum-utils
+        state: latest
+        update_cache: true
+
+    - name: Restart and enable Apache
+      service:
+        name: httpd
+        state: restarted
+        enabled: true
+  tags:
+    - conf_apache
+
+#################################  Install PHP ########################################## 
+- name: Install PHP
+  block:
+    - name: Install the epel
+      yum:
+          name: https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+          state: latest  
+
+    - name: Install the remi
+      yum:
+          name: http://rpms.remirepo.net/enterprise/remi-release-7.rpm
+          state: latest
+
+    - name: Install php 5.6 and dependences
+      shell: |
+        yum-config-manager --enable remi-php56
+        yum install php php-mysql php-gd php-imap php-ldap php-odbc php-pear php-xml php-xmlrpc php-mbstring php-mcrypt php-mssql php-snmp php-soap php-tidy curl curl-devel -y
+  tags:
+    - install_php
+
+#################################  Config wordpress ##########################################
+- name: Config wordpress
+  block:
+    - name: copy vhost.conf
+      template: src=vhost_conf.j2 dest=/etc/httpd/conf.d/vhost.conf owner=root group=root mode=0644
+
+    - name: Create folders for Wordpress
+      file: path=/var/www/html/wp.lab.local state=directory owner=root group=root mode=0755
+
+    - name: Create folders for Wordpress logs
+      file: path=/var/log/httpd/wp.lab.local state=directory owner=root group=root mode=0755
+
+    - name: copy wp_files
+      copy: src=wordpress.tar.gz dest=/root/files/wordpress.tar.gz owner=root group=root mode=0755
+
+    - name: unpack wordpress.tar.gz
+      shell: tar zxvf /root/files/wordpress.tar.gz -C /
+
+    - name: recursively update /var/www/html/wp.lab.local/wordpress/ directory owner
+      file: path=/var/www/html/wp.lab.local/wordpress state=directory recurse=yes owner=apache group=apache
+
+    - name: recursively update rights on /var/www/
+      file: path=/var/www mode=u=rwX,g=rX,o=rX recurse=yes
+
+    - name: Restart Apache
+      service:
+        name: httpd
+        state: restarted
+
+    - name: copy replication script
+      template: src=www-replication_sh.j2 dest=/root/scripts/www-replication.sh owner=root group=root mode=0755
+
+  tags:
+    - wp_conf

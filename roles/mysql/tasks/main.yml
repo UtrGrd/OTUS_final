@@ -1,0 +1,297 @@
+---
+# tasks file for mysql
+#################################  Install MySQL ##########################################
+- name: copy mysql rpm
+  copy:
+    src: ../files/mysql80-community-release-el7-3.noarch.rpm
+    dest: /root/distrib/mysql80-community-release-el7-3.noarch.rpm
+    mode: 0644
+
+- name: Install package mysql
+  yum:
+     name: /root/distrib/mysql80-community-release-el7-3.noarch.rpm
+     state: present
+
+- name: Install mysql-server
+  yum:
+    name: mysql-server
+    disable_gpg_check: yes
+    state: present
+
+- name: Restart mysql-server
+  service:
+    name: mysqld
+    state: restarted
+    enabled: true
+
+- name: Install MySQL-python
+  yum:
+    name:
+      - python3-pip
+      - MySQL-python
+    state: present
+    disable_gpg_check: yes
+  tags:
+    - mysql_install
+
+# - name: Reset password on Mysql
+#   block:
+#     - name: Check installation password
+#       shell: grep 'temporary password' /var/log/mysqld.log | awk '{print $13}'
+#       register: def_root_mysqlpass
+
+#     - name: Set new root password from default temporary password on servers
+#       mysql_user:
+#         login_user: root
+#         login_password: "{{ def_root_mysqlpass.stdout }}"
+#         name: root
+#         password: "{{  }}"
+#         check_implicit_admin: yes
+#         state: present
+
+#     - name: copy password for connection without password in playbook
+#       copy:
+#         dest: "/root/.my.cnf"
+#         content: |
+#           [client]
+#           password={{ MYSQL_ROOT_PASSWORD }}
+#       tags:
+#         - mysql_pass
+
+# #################################  Reset password on Mysql  ##########################################
+
+# - name: Reset password on Mysql
+#   block:
+#     - name: Check installation password
+#       shell: grep 'temporary password' /var/log/mysqld.log | awk '{print $13}'
+#       register: def_root_mysqlpass
+
+#     - name: Change authentication plugin to mysql_native_password
+#       ansible.builtin.shell:
+#         cmd: |
+#           mysql --connect-expired-password -u root -p"{{ def_root_mysqlpass.stdout }}" -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '{{ MYSQL_ROOT_PASSWORD }}';"
+
+#     - name: Set new root password from default temporary password on servers
+#       mysql_user:
+#         login_user: root
+#         login_password: "{{ def_root_mysqlpass.stdout }}"
+#         name: root
+#         password: "{{ MYSQL_ROOT_PASSWORD }}"
+#         check_implicit_admin: yes
+#         state: present
+
+#     - name: copy password for connection without password in playbook
+#       copy:
+#         dest: "/root/.my.cnf"
+#         content: |
+#           [client]
+#           password={{ MYSQL_ROOT_PASSWORD }}
+#       tags:
+#         - mysql_pass
+
+
+# - name: Reset password on Mysql
+#   block:
+#     - name: Check installation password
+#       shell: grep 'temporary password' /var/log/mysqld.log | awk '{print $13}'
+#       register: def_root_mysqlpass
+
+#     - name: Create temporary /root/.my.cnf with default password
+#       copy:
+#         dest: "/root/.my.cnf"
+#         content: |
+#           [client]
+#           password={{ def_root_mysqlpass.stdout }}
+#       tags:
+#         - mysql_pass
+
+#     # - name: Change authentication plugin to mysql_native_password
+#     #   ansible.builtin.shell:
+#     #     cmd: |
+#     #       mysql --connect-expired-password -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '{{ MYSQL_ROOT_PASSWORD }}';"
+
+# - name: Change authentication plugin to mysql_native_password
+#   ansible.builtin.shell:
+#     cmd: |
+#       mysql --connect-expired-password -u root -p"{{ def_root_mysqlpass.stdout }}" -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '{{ MYSQL_ROOT_PASSWORD }}';"
+#     - name: Set new root password from default temporary password on servers
+#       ansible.builtin.shell:
+#         cmd: |
+#           mysql -u root -e "SET PASSWORD FOR 'root'@'localhost' = PASSWORD('{{ MYSQL_ROOT_PASSWORD }}'); FLUSH PRIVILEGES;"
+
+#     - name: Update /root/.my.cnf with new root password
+#       copy:
+#         dest: "/root/.my.cnf"
+#         content: |
+#           [client]
+#           password={{ MYSQL_ROOT_PASSWORD }}
+#       tags:
+#         - mysql_pass
+#################################  Reset password on Mysql  ##########################################
+# - name: Reset password on Mysql
+#   block:
+#     - name: Check installation password
+#       shell: grep 'temporary password' /var/log/mysqld.log | awk '{print $13}'
+#       register: def_root_mysqlpass
+
+#     - name: Create temporary /root/.my.cnf with default password
+#       copy:
+#         dest: "/root/.my.cnf"
+#         content: |
+#           [client]
+#           password={{ def_root_mysqlpass.stdout }}
+#       tags:
+#         - mysql_pass
+
+#     - name: Print def_root_mysqlpass variable value
+#       debug:
+#         var: def_root_mysqlpass
+
+#     - name: Change authentication plugin to mysql_native_password
+#       ansible.builtin.shell:
+#         cmd: |
+#           mysql --connect-expired-password -u root -p"{{ def_root_mysqlpass.stdout }}" -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '{{ MYSQL_ROOT_PASSWORD }}';"
+
+#     - name: Set new root password from default tempor ary password on servers
+#       ansible.builtin.shell:
+#         cmd: |
+#           mysql -u root -e "SET PASSWORD FOR 'root'@'localhost' = PASSWORD('{{ MYSQL_ROOT_PASSWORD }}'); FLUSH PRIVILEGES;"
+
+#     - name: Update /root/.my.cnf with new root password
+#       copy:
+#         dest: "/root/.my.cnf"
+#         content: |
+#           [client]
+#           password={{ MYSQL_ROOT_PASSWORD }}
+#       tags:
+#         - mysql_pass
+
+#################################  Reset password on Mysql  ##########################################
+
+- name: Reset password on Mysql
+  block:
+    - name: Check installation password
+      shell: grep 'temporary password' /var/log/mysqld.log | awk '{print $13}'
+      register: def_root_mysqlpass    
+
+    - name: Set new root password from default temporary password on servers
+      shell: "mysql -e \"SET PASSWORD = '{{ MYSQL_ROOT_PASSWORD }}';\"
+            --connect-expired-password -uroot -p'{{ def_root_mysqlpass.stdout }}'"
+
+    - name: copy password for connection without password in playbook
+      copy:
+        dest: "/root/.my.cnf"
+        content: |
+          [client]
+          password={{ MYSQL_ROOT_PASSWORD }}
+  tags:
+    - mysql_pass    
+
+
+
+#################################  Config MySQL on servers  ##########################################
+- name: Confing MySQL on servers
+  block:
+    - name: copy my.cnf
+      template: src=my_cnf.j2 dest=/etc/my.cnf owner=root group=root mode=0644
+
+    - name: change root authentication_string
+      shell: mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH  mysql_native_password BY 'PaSswoRd@123';"
+
+    - name: Create database user 'admin' with full rights
+      shell: |
+        mysql -e "create user 'admin'@'%' IDENTIFIED WITH mysql_native_password  BY '{{ admin_mysqlpass }}';"
+        mysql -e "GRANT ALL PRIVILEGES ON *.* TO 'admin'@'%';"
+        mysql -e "FLUSH PRIVILEGES;"
+
+    - name: Create database user 'wpuser' 
+      shell: |
+        mysql -e "create user 'wpuser'@'%' IDENTIFIED WITH mysql_native_password BY '{{ wpuser_mysqlpass }}';"
+        mysql -e "GRANT ALL PRIVILEGES ON *.* TO 'wpuser'@'%';"
+        mysql -e "FLUSH PRIVILEGES;"        
+
+    - name: Create database user 'mysqld_exporter' 
+      shell: |
+        mysql -e "create user 'mysqld_exporter'@'localhost' IDENTIFIED BY '{{ mysqld_exporter_mysqlpass }}' WITH max_user_connections 3;"
+        mysql -e "GRANT PROCESS, REPLICATION CLIENT, SELECT ON *.* TO 'mysqld_exporter'@'localhost';"
+        mysql -e "FLUSH PRIVILEGES;"
+    
+    - name: Restart mysql-server
+      service:
+        name: mysqld
+        state: restarted
+
+  tags:
+    - mysql_conf
+
+#################################  Replication MySQL on the testpr2 ##########################################
+
+- name: Clean replication on the testpr2 (Master)
+  block:
+    - name: clean old replica - Stop replica
+      mysql_replication: mode=stopreplica
+
+    - name: clean old replica - Reset replica
+      mysql_replication: mode=resetreplica
+
+    - name: Clean old replication
+      shell: mysql -e "CHANGE MASTER TO GET_MASTER_PUBLIC_KEY=1;"
+
+    - name: Configure replication on the testpr2 (Master).
+      mysql_replication:
+        mode: changemaster
+        master_user: admin
+        master_password: "{{ admin_mysqlpass }}"
+        primary_auto_position: yes
+  when: inventory_hostname == "testpr2"
+  tags:
+    - mysql_repl_testpr2
+
+#################################  Replication MySQL on the testpr3 ##########################################
+
+- name: Configure replication on the testpr3
+  block:
+    - name: clean old replica - Stop replica
+      mysql_replication: mode=stopreplica
+
+    - name: clean old replica - Reset replica
+      mysql_replication: mode=resetreplica
+
+    - name: Clean old replication
+      shell: mysql -e "CHANGE MASTER TO GET_MASTER_PUBLIC_KEY=1;"
+
+    - name: Configure replication on the testpr3.
+      mysql_replication:
+        mode: changeprimary
+        master_host: 10.10.62.11
+        master_user: admin
+        master_password: "{{ admin_mysqlpass }}"
+        primary_auto_position: yes
+
+    - name: Start replica
+      mysql_replication:
+        mode: startreplica            
+  when: inventory_hostname == "testpr3"
+  tags:
+    - mysql_repl_testpr3
+
+#################################  Restore wp_base on the testpr2 ########################################## 
+- name: Restore wp_base on the testpr2
+  block:
+    - name: CREATE DATABASE wordpress
+      mysql_db:
+        name: wordpress
+        state: present
+
+    - name: copy wp_base to testpr2
+      copy: src=files/wordpress/wordpress.sql.gz dest=/root/files/wordpress/wordpress.sql.gz owner=root group=root mode=0755
+
+    - name: copy restore_script
+      copy: src=restore_wp_base.sh dest=/root/scripts/restore_wp_base.sh owner=root group=root mode=0755
+
+    - name: Execute the script
+      command: sh /root/scripts/restore_wp_base.sh     
+      
+  when: inventory_hostname == "testpr2"
+  tags:
+    - restore_wp_base_testpr2

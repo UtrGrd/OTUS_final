@@ -1,0 +1,26 @@
+---
+# tasks file for rsyslog
+#################################  Config Rsyslog server on testpr4   ##########################################
+- name: Config Rsyslog server on testpr4 
+  block:
+    - name: copy rsyslog.conf
+      template: src=log-rsyslog_conf_testpr4.j2 dest=/etc/rsyslog.conf owner=root group=root mode=0644
+      notify:
+        - Restart rsyslog  
+  when: inventory_hostname == "testpr4"
+  tags:
+    - config_rsyslog
+#################################  Config to send log from testpr2/3 to testpr4    ##########################################  
+- name: Config to send log from testpr2/3 to testpr4  
+  block:
+    - name: copy rsyslog.conf for apache
+      template: src=apache_log_conf_testpr2-3.j2 dest=/etc/rsyslog.d/apache.log.conf owner=root group=root mode=0644
+      notify:
+        - Restart rsyslog
+
+    - name: copy rsyslog.conf for mysql
+      template: src=mysql_log_conf_testpr2-3.j2 dest=/etc/rsyslog.d/mysql.log.conf owner=root group=root mode=0644
+      notify:
+        - Restart rsyslog
+  when: inventory_hostname == "testpr2" or inventory_hostname == "testpr3"
+

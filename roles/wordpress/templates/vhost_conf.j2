@@ -1,0 +1,15 @@
+Listen 8080
+
+<VirtualHost *:8080>
+ServerAdmin ek@qrator.net
+ServerName wp.lab.local
+ServerAlias www.wp.lab.local
+DocumentRoot /var/www/html/wp.lab.local/
+ErrorLog /var/log/httpd/wp.lab.local/error.log
+CustomLog /var/log/httpd/wp.lab.local/access.log combined
+</VirtualHost>
+
+# Allow .htaccess overwrites
+<Directory /var/www/html/wp.lab.local//>
+    AllowOverride All
+</Directory>

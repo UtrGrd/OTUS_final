@@ -1,0 +1,22 @@
+#For access.log:
+$ModLoad imfile
+$InputFileName /var/log/httpd/wp.lab.local/access.log
+$InputFileTag apache_access:
+$InputFileStateFile stat-apache-access
+$InputFileSeverity info
+$InputFileFacility local3
+$InputRunFileMonitor
+$InputFilePollInterval 10
+local3.* @@10.10.62.13:514
+
+#For error.log
+/etc/rsyslog.conf
+$ModLoad imfile
+$InputFileName /var/log/httpd/wp.lab.local/error.log
+$InputFileTag apache_error:
+$InputFileStateFile stat-apache-error
+$InputFileSeverity info
+$InputFileFacility local3
+$InputRunFileMonitor
+$InputFilePollInterval 10
+local3.* @@10.10.62.13:514

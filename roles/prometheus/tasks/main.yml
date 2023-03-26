@@ -1,0 +1,60 @@
+---
+# tasks file for prometheus
+#################################  Install and config prometheus  ##########################################
+- name: user for prometheus
+  shell: useradd --no-create-home --shell /usr/sbin/nologin prometheus
+
+- name: Create working folders prometheus
+  file: path=/etc/prometheus state=directory owner=prometheus group=prometheus mode=0755
+
+- name: Create working folders prometheus
+  file: path=/var/lib/prometheus state=directory owner=prometheus group=prometheus mode=0755
+
+- name: copy prometheus rpm
+  copy:
+    src: ../files/prometheus-2.30.3.linux-amd64.tar.gz
+    dest: /root/distrib/prometheus-2.30.3.linux-amd64.tar.gz
+    mode: 0755
+
+- name: Extract prometheus-2.30.3.linux-amd64.tar.gz into /root/distrib/
+  unarchive:
+    src: /root/distrib/prometheus-2.30.3.linux-amd64.tar.gz
+    dest: /root/distrib
+    remote_src: yes
+
+- name: copy files for prometheus
+  copy:
+    src: '{{ item }}'
+    dest: /usr/local/bin
+    owner: prometheus
+    group: prometheus
+    mode: '0755'
+    remote_src: yes
+  with_items:
+      - /root/distrib/prometheus-2.30.3.linux-amd64/prometheus
+      - /root/distrib/prometheus-2.30.3.linux-amd64/promtool
+
+- name: copy files for prometheus
+  copy:
+    src: '{{ item }}'
+    dest: /etc/prometheus
+    owner: prometheus
+    group: prometheus
+    mode: '0755'
+    remote_src: yes
+  with_items:
+      - /root/distrib/prometheus-2.30.3.linux-amd64/console_libraries
+      - /root/distrib/prometheus-2.30.3.linux-amd64/consoles
+
+- name: Copy config file .yml for prometheus
+  template: src=prometheus_yml.j2 dest=/etc/prometheus/prometheus.yml owner=prometheus group=prometheus mode=0644
+
+- name: Copy the service file for the Prometheus
+  template: src=prometheus_service.j2 dest=/etc/systemd/system/prometheus.service owner=root group=root mode=0755
+
+- name: Start and enable the Prometheus
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    name: prometheus
+    enabled: true
