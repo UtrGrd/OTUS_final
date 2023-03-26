@@ -10,12 +10,12 @@
 - name: Create working folders prometheus
   file: path=/var/lib/prometheus state=directory owner=prometheus group=prometheus mode=0755
 
-- name: copy prometheus rpm
-  copy:
-    src: ../files/prometheus-2.30.3.linux-amd64.tar.gz
+- name: Download prometheus 
+  get_url:
+    url: https://github.com/prometheus/prometheus/releases/download/v2.30.3/prometheus-2.30.3.linux-amd64.tar.gz
     dest: /root/distrib/prometheus-2.30.3.linux-amd64.tar.gz
     mode: 0755
-
+    
 - name: Extract prometheus-2.30.3.linux-amd64.tar.gz into /root/distrib/
   unarchive:
     src: /root/distrib/prometheus-2.30.3.linux-amd64.tar.gz
