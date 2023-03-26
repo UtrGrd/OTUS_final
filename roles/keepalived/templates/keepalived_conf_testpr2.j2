@@ -1,0 +1,33 @@
+vrrp_script chk_mysql {
+  script "pidof mysqld"
+  interval 2                       # every 2 seconds
+  weight 2
+}
+
+vrrp_script chk_replication {
+  script "/usr/local/bin/check_replication.sh"
+  interval 5
+  weight 5
+}
+
+vrrp_instance VI_1 {
+  interface eth1                   # the network interface to which the virtual address is assigned
+  state MASTER                     # MASTER for master server
+  virtual_router_id 50             # the virtual router ID must be unique to each VRRP instance
+  unicast_src_ip 10.10.62.11       # IP address of Master Server
+
+  unicast_peer {
+    10.10.62.12                      # IP address of Slave Server
+  }
+
+  priority 102                     # master server should always have a higher priority number 
+                                   # than the slave
+  track_script {
+    chk_mysql
+    chk_replication
+  }
+
+  virtual_ipaddress {
+    10.10.62.20/24 dev eth1     # Virtual IP address
+  }
+}

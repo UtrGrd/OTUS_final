@@ -1,0 +1,30 @@
+---
+# tasks file for backup
+#################################  Backup config, base, wp data ########################################## 
+- name: Create folders for backup from testpr2 on testpr4
+  file: path=/var/backup/testpr2 state=directory owner=root group=root mode=0755
+  when: inventory_hostname == "testpr4"
+
+- name: Create folders for backup from testpr3 on testpr4
+  file: path=/var/backup/testpr3 state=directory owner=root group=root mode=0755
+  when: inventory_hostname == "testpr4"  
+
+- name: Config backup on testpr2/3
+  block:
+    - name: Create backup_log file
+      file: path=/var/log/backup.txt state=touch owner=root group=root mode=0755
+
+    - name: Create folders for local backup
+      file: path=/var/backup state=directory owner=root group=root mode=0755
+
+    - name: copy wp-backup_sh.j2
+      template: src=wp-backup_sh.j2 dest=/root/scripts/wp-backup.sh owner=root group=root mode=0755
+
+    - name: copy crontab file
+      template: src=crontab.j2 dest=/root/scripts/crontab owner=root group=root mode=0755
+
+    - name: run crontab
+      shell: crontab /root/scripts/crontab
+
+  when: inventory_hostname == "testpr2" or inventory_hostname == "testpr3"      
+

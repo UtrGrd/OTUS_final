@@ -1,0 +1,11 @@
+#!/bin/bash
+MYSQL_USER='root'
+
+status=$(mysql --defaults-extra-file=/root/.my.cnf -u$MYSQL_USER -e "SHOW SLAVE STATUS\G;" | grep "Slave_SQL_Running: Yes" | wc -l)
+
+if [ $status -eq 1 ]
+then
+  exit 0
+else
+  exit 1
+fi

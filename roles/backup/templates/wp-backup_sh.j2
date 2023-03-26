@@ -1,0 +1,24 @@
+#!/usr/bin/sh
+
+date=`date +'%d%m%Y-%H-%M'`
+backpath=/var/backup
+backpath_rm=/var/backup/{{ inventory_hostname }}
+
+echo "##########################################################################################"
+echo "Backup Started  - $date"
+
+#Make dir with current date
+mkdir $backpath/$date
+
+#Backup wordpress base
+mysqldump wordpress --single-transaction --set-gtid-purged=OFF --routines --triggers --events | /usr/bin/gzip -c > $backpath/$date/backup-{{ inventory_hostname }}-sql.sql.gz;
+
+#Backup Wordpress data
+sudo tar zcvf $backpath/$date/backup-testpr2-wp_data.tar.gz /var/www/html/wp.lab.local/ 
+
+#Copy to testpr4
+scp -r $backpath/* root@10.10.62.13:$backpath_rm/
+rm -rf $backpath/backup*
+
+echo "##########################################################################################"
+echo "Backup Finished  - $date"

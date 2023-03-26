@@ -1,0 +1,49 @@
+---
+# tasks file for keepalived
+#################################  Install and config Keepalived ##########################################
+- name: install soft
+  yum:
+    name:
+      - keepalived
+    state: latest
+    update_cache: true
+
+- name: copy ifcfg-eth1 config 
+  template: src=eth1.j2 dest=/etc/sysconfig/network-scripts/ifcfg-eth1 owner=root group=root mode=0600
+
+- name: Create new file VIP 
+  template: src=eth1_vip.j2 dest=/etc/sysconfig/network-scripts/ifcfg-eth1:1 owner=root group=root mode=0600
+
+- name: Copy check_replication.sh script
+  template:
+    src: check_replication.sh.j2
+    dest: /usr/local/bin/check_replication.sh
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Enable IP forwarding
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: '1'
+    state: present
+
+- name: backup keepalived.conf
+  copy: remote_src=true src=/etc/keepalived/keepalived.conf dest=/etc/keepalived/keepalived.conf.back
+
+- name: Config keepalived.conf on testpr2
+  template: src=keepalived_conf_testpr2.j2 dest=/etc/keepalived/keepalived.conf owner=root group=root mode=0644
+  when: inventory_hostname == "testpr2"
+
+- name: Config keepalived.conf on testpr3
+  template: src=keepalived_conf_testpr3.j2 dest=/etc/keepalived/keepalived.conf owner=root group=root mode=0644
+  when: inventory_hostname == "testpr3"  
+
+- name: restart network service
+  service: name=network state=restarted
+
+- name: start and enable keepalived service
+  service:
+    name: keepalived
+    state: restarted
+    enabled: true

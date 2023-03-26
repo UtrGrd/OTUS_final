@@ -1,0 +1,5 @@
+* * * * * sleep 00; /root/scripts/www-replication.sh
+* * * * * sleep 15; /root/scripts/www-replication.sh
+* * * * * sleep 30; /root/scripts/www-replication.sh
+* * * * * sleep 45; /root/scripts/www-replication.sh
+*/5 * * * * /root/scripts/wp-backup.sh >> /var/log/backup.txt 2>&1

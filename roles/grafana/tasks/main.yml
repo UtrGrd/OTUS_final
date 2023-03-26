@@ -1,0 +1,22 @@
+---
+# tasks file for grafana
+#################################  Install and config Grafana ##########################################
+- name: download grafana rpm
+  get_url:
+    url: https://dl.grafana.com/oss/release/grafana-8.2.2-1.x86_64.rpm
+    dest: /root/distrib/grafana-8.2.2-1.x86_64.rpm
+    mode: 0644
+
+- name: Install package garana
+  yum:
+     name: /root/distrib/grafana-8.2.2-1.x86_64.rpm
+     state: present
+
+- name: Restore grafana db
+  copy: src=grafana.db dest=/var/lib/grafana/grafana.db owner=grafana group=grafana mode=0640
+
+- name: Start and enable the grafana
+  systemd:
+    name: grafana-server.service
+    state: restarted
+    enabled: true

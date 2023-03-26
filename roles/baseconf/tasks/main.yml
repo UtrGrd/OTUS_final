@@ -1,0 +1,124 @@
+---
+# tasks file for baseconf
+
+#################################  Install soft   ##########################################
+  - name: Install EPEL Repo package from standart repo
+    yum:
+      name: epel-release
+      state: present
+  
+  - name: Set timezone to Europe/Moscow
+    timezone: name=Europe/Moscow
+    
+  - name: Restart chronyd
+    service:
+      name: chronyd
+      state: restarted
+      enabled: true
+
+  - name: Upgrade all packages
+    ansible.builtin.yum:
+      name: '*'
+      state: latest
+
+  #- name: Disable SELinux 
+    #ansible.posix.selinux:
+      #state: disabled
+    #tags: selinux 
+
+  - name: install soft
+    yum:
+      name:
+        - nano
+        - net-tools
+        - bind-utils
+        - traceroute
+        - telnet
+        - tcpdump
+        - wget
+        - policycoreutils-python
+      state: latest
+      update_cache: true
+    tags:
+      - install_soft    
+
+#################################  Create folders #######################################
+  - name: Create working folders 
+    file:
+      path: /root/{{ item }}
+      state: directory
+      mode: '0755'
+      owner: root
+      group: root
+    with_items:
+      - distrib
+      - files
+      - scripts   
+    tags:
+      - create_folders_base           
+
+#################################  Config ssh  ##########################################
+  - name: copy key to servers
+    block:
+      - name: copy ssh_client_config
+        copy: src=files/config dest=/root/.ssh/config owner=root group=root mode=0600
+    
+      - name: copy id_rsa
+        copy: src={{ inventory_hostname }}/id_rsa dest=/root/.ssh/id_rsa owner=root group=root mode=0600     
+
+      - name: copy id_rsa.pub
+        copy: src={{ inventory_hostname }}/id_rsa.pub dest=/root/.ssh/id_rsa.pub owner=root group=root mode=0644  
+
+      - name: allow connection by password on all interfaces
+        lineinfile:
+          dest: /root/.ssh/authorized_keys
+          line: "{{ item }}"
+        with_items:
+          - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDQTuNFokLVBMWPY4t73qKzK2YcqDWKaawBuPE5OsoDsJDK9WmDlLIo53xFrLR+NiZbUlJJJbUvYcqNPSEhAJMG2mg25PviYuNnntEMv6S9Y+EPY/Ett5yTt+3rofglsxzlfIN+nT/toaKddoayzMXn1sDnG+En7fSU+beuTk1GvlInETu8XS+A1/ueT1vB9rA2vZhn+SwGNT7kA0Hkn/ilymkVJ0K5Cmu5QuOh8KdcB/caSj807YDkG5ywszbcEYevADCtUK6UpkWzxd8jyciWz1CYxcBPTIfRi9oxHFVAhZRa0hE5Z7U+ApmqudW51sbcodGmUOhvqbueg3vmDmlf root@test-pr1
+          - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC7nAm58zMWrL5TFz8gpzQXwXZv/7z2VJkvXhxMAqAVD0T6pitg2qxIvuQ8/vhoWZ8MGsGd+J4tpPWcGWzHAkLfZp8Kn57oskdzVo51xHKGw4/nzSZPqFTySZjkiLbGdhdrVyESpqaHLqGSEfevL5HmH4YZ7gkoaoYxzf8O13pDMAVVxgh7cDQDpxgTQod3jf+K3YrAS+ITM0pPyHhmPFkj+l+Z8K1QPiW6SP2UDVNCThtoGUt9VD9Gt7xhZVM1lYmZMTrjYFBShAUCPs8Od9sLfOy7K0t8I3yrXVjDUa9lXNK7TSpmH+tcKWqyGg3rRusCnKi8bBoQvPpA95dxAEf7 root@test-pr2
+          - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDN8m/AB5D+E8fxTYud9TUH3Muk7GKN6dZQF6hINh6O9EpuDU9i+dggvQ8vuXHbHhB5OFXPejfKXNNmbciLSwjK1ssFKjqlKeb4acP9it0roP7sQHVFCF3NTAj37k6SbVly4ndzLV81AIGICfj8d/XivP2oITJYsf7figzTMOI8uPvS32CM6R5rw6FwremlcqY6jvcNMNh+UTj1DNQysDVwNUUmoBk20PV9loKyJvDWzttwdVlLPY49sPZXamn71Qjiu9U3s0aPwvTqEQpqtTVXIo1I1xfSKux+MytPMqqfHjpGI8JSbalaOKy4SXXBJI1GjO57i31bTC4+lYpIEtcT root@test-pr3
+          - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDYeDoddn6FJ4yXeYc9x8VK8lWPX2Ql5qAy3Suyz2xuxpzcsnnj5Wx8lrR5XYDtWh20nTkL6jgL7fpNEObM8Bv9UyqBxQFnRteR5BuGWmUneYccy26XZD+wiO6CZj8inyTjK9k7xaykFg8fG+JVS+Vh9VPt2fiuTCzWNJG7L/lQzIgoIsGB84jf4idih996YzrbFk7dVH6tpPs80IycYYgb1WeGk6vLtkduhIYIAClU4iiwG9Tb9gkj++HN1ky9vNXU7qwcoMUwIVaHoKelKrGSUEP7gBp6a0c9cvuwsuvczmy9PSDfz9vIZo3g3pUT/CPqjFNavqO51xq5u4hm3oGR root@test-pr4
+    tags:
+      - ssh_conf
+
+#################################  Config iptables  ##########################################
+  - name: Config iptables on testpr1
+    block:
+      - name: install iptables on testpr1
+        yum:        
+          name:
+            - iptables
+            - iptables-services
+          state: present
+          update_cache: true
+
+      - name: copy iptables config on testpr1
+        template:
+          src: iptables_testpr1.j2
+          dest: /etc/sysconfig/iptables
+          owner: root
+          group: root
+          mode: 0600
+          
+      - name: start and enable iptables service on testpr1
+        service:
+          name: iptables
+          state: restarted
+          enabled: true
+
+      - name: copy iptables.sh
+        copy: src={{ inventory_hostname }}/iptables.sh dest=/root/scripts/iptables.sh owner=root group=root mode=0755          
+
+      #- name: set up forward packages across routers
+        #sysctl:
+          #name: net.ipv4.ip_forward
+          #value: '1'
+          #state: present
+
+      - name: restart network service on testpr1
+        service:
+          name: network
+          state: restarted
+    when: inventory_hostname == "testpr1"
+    tags:
+      - iptables_conf

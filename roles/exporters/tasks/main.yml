@@ -1,0 +1,77 @@
+---
+# tasks file for exporters
+#################################  Install and config node_exporter  ##########################################
+- name: user for node_exporter
+  user:
+    name: node_exporter
+    shell: /bin/false
+    createhome: no
+
+- name: Download node_exporter 
+  get_url:
+    url: https://github.com/prometheus/node_exporter/releases/download/v1.2.2/node_exporter-1.2.2.linux-amd64.tar.gz
+    dest: /root/distrib/node_exporter-1.2.2.linux-amd64.tar.gz
+    mode: 0755
+
+- name: Extract node_exporter-1.2.2.linux-amd64.tar.gz into /root/distrib/
+  unarchive:
+    src: /root/distrib/node_exporter-1.2.2.linux-amd64.tar.gz
+    dest: /root/distrib
+    remote_src: yes   
+
+- name: copy file for node_exporter
+  copy: src=/root/distrib/node_exporter-1.2.2.linux-amd64/node_exporter dest=/usr/local/bin/node_exporter owner=node_exporter group=node_exporter mode=0755 remote_src=yes
+
+- name: copy service file for mysqld_exporter
+  template: src=node_exporter_service.j2 dest=/etc/systemd/system/node_exporter.service owner=root group=root mode=0755
+
+- name: Start and enable the node_exporter service
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    name: node_exporter
+    enabled: true  
+
+#################################  Install and config mysqld_exporter  ##########################################  
+- name: Install and config mysqld_exporter
+  block:
+    - name: user for mysqld_exporter
+      user:
+        name: mysqld_exporter
+        shell: /bin/false
+        createhome: no  
+
+    - name: Download mysqld_exporter 
+      get_url:
+        url: https://github.com/prometheus/mysqld_exporter/releases/download/v0.13.0/mysqld_exporter-0.13.0.linux-amd64.tar.gz
+        dest: /root/distrib/mysqld_exporter-0.13.0.linux-amd64.tar.gz
+        mode: 0755
+
+    - name: Extract mysqld_exporter-0.13.0.linux-amd64.tar.gz into /root/distrib/
+      unarchive:
+        src: /root/distrib/mysqld_exporter-0.13.0.linux-amd64.tar.gz
+        dest: /root/distrib
+        remote_src: yes
+
+    - name: copy file mysqld_exporter
+      copy: src=/root/distrib/mysqld_exporter-0.13.0.linux-amd64/mysqld_exporter dest=/usr/local/bin/mysqld_exporter owner=mysqld_exporter group=mysqld_exporter mode=0755 remote_src=yes
+
+    - name: Create folder 
+      file: path=/usr/local/etc/mysql_exporter state=directory owner=mysqld_exporter group=mysqld_exporter mode=0755
+
+    - name: Copy a MySQL password file for mysqld_exporter
+      template: src=mysqld_exporter_cnf.j2 dest=/usr/local/etc/mysql_exporter/.mysqld_exporter.cnf owner=mysqld_exporter group=mysqld_exporter mode=0600     
+      
+    - name: copy service file for mysqld_exporter
+      template: src=mysql_exporter_service.j2 dest=/etc/systemd/system/mysql_exporter.service owner=root group=root mode=0755   
+
+    - name: Start and enable the mysqld_exporter service
+      systemd:
+        state: restarted
+        daemon_reload: yes
+        name: mysql_exporter
+        enabled: true     
+       
+  when: inventory_hostname == "testpr2" or inventory_hostname == "testpr3"
+  tags:
+    - sql_exporter_conf
