@@ -61,5 +61,6 @@
 - пароль - HTdfg78345Kl+k3 
 - URL: https://grafana.lab.local/login
 
+##### Перед запуском не забыть добавить архив с актуальными файлами Wordpress в /roles/wordpress/files/
 
 
