@@ -1,0 +1,66 @@
+---
+#################################  Config all servers   ################################################
+- hosts: all
+  gather_facts: no
+  become: true
+  vars_files:
+    - defaults/main.yml
+
+  roles:
+  - role: baseconf
+    tags: baseconf
+  - role: selinux
+    tags: selinux   
+
+#################################  Install and Config testpr1   ##########################################
+- hosts: testpr1
+  gather_facts: no
+  become: true
+  vars_files:
+    - defaults/main.yml
+
+  roles:
+  - role: nginx
+    tags: nginx
+  - role: exporters
+    tags: exporters            
+
+#################################  Install and Config testpr2/3   ##########################################  
+- hosts: backend
+  gather_facts: no
+  become: true
+  vars_files:
+    - defaults/main.yml
+
+  roles: 
+  - role: mysql
+    tags: mysql
+  - role: keepalived
+    tags: keepalived
+  - role: wordpress
+    tags: wordpress
+  - role: exporters
+    tags: exporters
+  - role: rsyslog
+    tags: rsyslog
+  - role: backup
+    tags: backup                     
+
+#################################  Install and Config testpr4   ##########################################
+- hosts: testpr4
+  gather_facts: no
+  become: true
+  vars_files:
+    - defaults/main.yml
+
+  roles:
+  - role: prometheus
+    tags: prometheus
+  - role: grafana
+    tags: grafana
+  - role: exporters
+    tags: exporters
+  - role: rsyslog
+    tags: rsyslog
+  - role: backup
+    tags: backup
